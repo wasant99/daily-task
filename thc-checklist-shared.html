@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>THC Checklist — 8 พ.ค. 2569</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+  :root {
+    --red: #e63946;
+    --purple: #7b2d8b;
+    --yellow: #f4a261;
+    --green: #2d6a4f;
+    --bg: #f8f7f4;
+    --card: #ffffff;
+    --text: #1a1a2e;
+    --muted: #6b7280;
+    --border: #e5e7eb;
+    --check-size: 22px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Sarabun', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding: 24px 16px 48px; }
+
+  /* LOGIN SCREEN */
+  #loginScreen {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    min-height: 80vh; gap: 20px;
+  }
+  .login-box {
+    background: white; border-radius: 16px; border: 1.5px solid var(--border);
+    padding: 40px 32px; text-align: center; max-width: 360px; width: 100%;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+  }
+  .login-logo { font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 3px; color: var(--muted); margin-bottom: 16px; }
+  .login-title { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+  .login-sub { font-size: 13px; color: var(--muted); margin-bottom: 28px; line-height: 1.6; }
+  #loginBtn {
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    width: 100%; padding: 12px 20px; border-radius: 8px;
+    border: 1.5px solid var(--border); background: white;
+    font-family: 'Sarabun', sans-serif; font-size: 15px; font-weight: 600;
+    cursor: pointer; transition: all 0.15s;
+  }
+  #loginBtn:hover { background: #f9fafb; border-color: #9ca3af; }
+  #loginBtn svg { flex-shrink: 0; }
+
+  /* MAIN APP */
+  #app { display: none; }
+
+  header {
+    max-width: 680px; margin: 0 auto 20px;
+    display: flex; align-items: flex-end; justify-content: space-between;
+    border-bottom: 3px solid var(--text); padding-bottom: 12px;
+  }
+  .brand { font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 600; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; }
+  h1 { font-size: 22px; font-weight: 700; }
+  .date-badge { font-family: 'IBM Plex Mono', monospace; font-size: 12px; background: var(--text); color: white; padding: 4px 10px; border-radius: 4px; }
+
+  .user-bar {
+    max-width: 680px; margin: 0 auto 20px;
+    display: flex; align-items: center; justify-content: space-between;
+    background: white; border-radius: 10px; border: 1.5px solid var(--border);
+    padding: 10px 16px;
+  }
+  .user-info { display: flex; align-items: center; gap: 10px; }
+  .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--text); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; }
+  .user-name { font-weight: 600; font-size: 14px; }
+  .user-email { font-size: 11px; color: var(--muted); font-family: 'IBM Plex Mono', monospace; }
+  .logout-btn { font-size: 12px; color: var(--muted); background: none; border: 1px solid var(--border); border-radius: 6px; padding: 4px 10px; cursor: pointer; }
+  .logout-btn:hover { color: var(--red); border-color: var(--red); }
+
+  /* SHEET SETUP */
+  #setupBar {
+    max-width: 680px; margin: 0 auto 20px;
+    background: #fffbeb; border: 1.5px solid #fde68a; border-radius: 10px; padding: 14px 16px;
+  }
+  #setupBar p { font-size: 13px; color: #92400e; margin-bottom: 10px; font-weight: 600; }
+  #setupBar small { font-size: 12px; color: #78350f; display: block; margin-bottom: 10px; line-height: 1.6; }
+  .setup-row { display: flex; gap: 8px; }
+  #sheetIdInput {
+    flex: 1; padding: 8px 12px; border-radius: 6px; border: 1.5px solid #fde68a;
+    font-family: 'IBM Plex Mono', monospace; font-size: 12px; background: white;
+  }
+  #saveSheetBtn {
+    padding: 8px 14px; border-radius: 6px; background: var(--text); color: white;
+    border: none; font-family: 'Sarabun', sans-serif; font-size: 13px; cursor: pointer;
+  }
+  #newSheetBtn {
+    padding: 8px 14px; border-radius: 6px; background: #2d6a4f; color: white;
+    border: none; font-family: 'Sarabun', sans-serif; font-size: 13px; cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .progress-bar-wrap { max-width: 680px; margin: 0 auto 8px; background: var(--border); border-radius: 99px; height: 8px; overflow: hidden; }
+  .progress-bar { height: 100%; background: linear-gradient(90deg, var(--red), var(--purple)); border-radius: 99px; transition: width 0.4s ease; width: 0%; }
+  .progress-label { max-width: 680px; margin: 0 auto 20px; font-size: 13px; color: var(--muted); font-family: 'IBM Plex Mono', monospace; text-align: right; }
+
+  .sync-status { max-width: 680px; margin: 0 auto 16px; font-size: 12px; font-family: 'IBM Plex Mono', monospace; color: var(--muted); text-align: center; }
+  .sync-status.syncing { color: #f59e0b; }
+  .sync-status.ok { color: #2d6a4f; }
+  .sync-status.err { color: var(--red); }
+
+  .section { max-width: 680px; margin: 0 auto 16px; background: var(--card); border-radius: 12px; border: 1.5px solid var(--border); overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+  .section-header { display: flex; align-items: center; gap: 10px; padding: 14px 18px; border-bottom: 1.5px solid var(--border); cursor: pointer; user-select: none; }
+  .section-header:hover { background: #fafafa; }
+  .dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+  .section-title { font-weight: 700; font-size: 15px; flex: 1; }
+  .section-count { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--muted); background: var(--bg); border-radius: 99px; padding: 2px 8px; border: 1px solid var(--border); }
+  .section-chevron { font-size: 12px; color: var(--muted); transition: transform 0.2s; }
+  .section.collapsed .section-chevron { transform: rotate(-90deg); }
+  .section.collapsed .section-body { display: none; }
+  .section-body { padding: 6px 0; }
+
+  .item { display: flex; align-items: flex-start; gap: 12px; padding: 10px 18px; border-bottom: 1px solid #f3f4f6; transition: background 0.15s; cursor: pointer; position: relative; }
+  .item:last-child { border-bottom: none; }
+  .item:hover { background: #fafafa; }
+  .item.done .item-title { text-decoration: line-through; color: var(--muted); }
+  .item.loading { pointer-events: none; opacity: 0.6; }
+
+  .checkbox { width: var(--check-size); height: var(--check-size); border-radius: 6px; border: 2px solid var(--border); flex-shrink: 0; display: flex; align-items: center; justify-content: center; margin-top: 1px; transition: all 0.15s; background: white; }
+  .item.done .checkbox { background: var(--green); border-color: var(--green); }
+  .checkbox-tick { display: none; color: white; font-size: 13px; font-weight: 700; }
+  .item.done .checkbox-tick { display: block; }
+
+  .item-content { flex: 1; min-width: 0; }
+  .item-title { font-size: 14px; font-weight: 600; line-height: 1.4; color: var(--text); }
+  .item-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+  .item-who { font-size: 11px; color: var(--muted); font-family: 'IBM Plex Mono', monospace; margin-top: 3px; }
+
+  .tag { font-size: 11px; padding: 2px 7px; border-radius: 4px; font-family: 'IBM Plex Mono', monospace; }
+  .tag-person { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+  .tag-due { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+  .tag-project { background: #f3f4f6; color: #374151; border: 1px solid #e5e7eb; }
+  .tag-due.urgent { background: #fef2f2; color: #991b1b; border-color: #fecaca; }
+
+  .s-red .dot { background: var(--red); }
+  .s-red .section-header { border-left: 4px solid var(--red); }
+  .s-purple .dot { background: var(--purple); }
+  .s-purple .section-header { border-left: 4px solid var(--purple); }
+  .s-yellow .dot { background: var(--yellow); }
+  .s-yellow .section-header { border-left: 4px solid var(--yellow); }
+  .s-green .dot { background: var(--green); }
+  .s-green .section-header { border-left: 4px solid var(--green); }
+
+  .refresh-btn { display: block; max-width: 680px; margin: 8px auto 4px; padding: 10px; background: transparent; border: 1.5px solid var(--border); border-radius: 8px; font-family: 'Sarabun', sans-serif; font-size: 13px; color: var(--muted); cursor: pointer; transition: all 0.15s; }
+  .refresh-btn:hover { border-color: #6b7280; color: var(--text); }
+
+  footer { max-width: 680px; margin: 24px auto 0; text-align: center; font-size: 12px; color: var(--muted); font-family: 'IBM Plex Mono', monospace; }
+
+  .spinner { display: inline-block; width: 12px; height: 12px; border: 2px solid #e5e7eb; border-top-color: var(--muted); border-radius: 50%; animation: spin 0.6s linear infinite; vertical-align: middle; margin-right: 4px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">THC — JAKIT GROUP</div>
+    <div class="login-title">เช็กลิสต์งานทีม</div>
+    <div class="login-sub">เข้าสู่ระบบด้วย Google เพื่อติ๊กงานและบันทึกชื่อผู้รับผิดชอบ</div>
+    <button id="loginBtn" onclick="signIn()">
+      <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"/><path fill="#FBBC05" d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707s.102-1.167.282-1.707V4.961H.957C.347 6.175 0 7.548 0 9s.348 2.825.957 4.039l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.961L3.964 7.293C4.672 5.166 6.656 3.58 9 3.58z"/></svg>
+      เข้าสู่ระบบด้วย Google
+    </button>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app">
+  <header>
+    <div>
+      <div class="brand">THC — JAKIT GROUP</div>
+      <h1>เช็กลิสต์งานประจำวัน</h1>
+    </div>
+    <div class="date-badge">8 พ.ค. 2569</div>
+  </header>
+
+  <div class="user-bar">
+    <div class="user-info">
+      <div class="user-avatar" id="userAvatar">?</div>
+      <div>
+        <div class="user-name" id="userName">—</div>
+        <div class="user-email" id="userEmail">—</div>
+      </div>
+    </div>
+    <button class="logout-btn" onclick="signOut()">ออกจากระบบ</button>
+  </div>
+
+  <div id="setupBar">
+    <p>⚙️ ตั้งค่า Google Sheet</p>
+    <small>กด "สร้าง Sheet ใหม่" เพื่อให้ระบบสร้างไฟล์ใหม่ให้อัตโนมัติ หรือวาง Spreadsheet ID ที่มีอยู่</small>
+    <div class="setup-row">
+      <input id="sheetIdInput" type="text" placeholder="Spreadsheet ID (ถ้ามีอยู่แล้ว)">
+      <button id="newSheetBtn" onclick="createNewSheet()">+ สร้างใหม่</button>
+      <button id="saveSheetBtn" onclick="saveSheetId()">บันทึก</button>
+    </div>
+  </div>
+
+  <div class="progress-bar-wrap"><div class="progress-bar" id="progressBar"></div></div>
+  <div class="progress-label" id="progressLabel">— / — เสร็จแล้ว</div>
+  <div class="sync-status" id="syncStatus">— ยังไม่ได้เชื่อมต่อ Sheet</div>
+
+  <!-- 🔴 วันนี้โดยเฉพาะ -->
+  <div class="section s-red" id="sec-today">
+    <div class="section-header" onclick="toggleSection('sec-today')">
+      <div class="dot"></div>
+      <div class="section-title">🔴 วันนี้โดยเฉพาะ (Due Today)</div>
+      <span class="section-count" id="count-sec-today">—</span>
+      <span class="section-chevron">▼</span>
+    </div>
+    <div class="section-body">
+      <div class="item" data-key="today-1" onclick="toggle(this)"><div class="checkbox"><span class="checkbox-tick">✓</span></div><div class="item-content"><div class="item-title">รูปถ่ายประกอบการส่งสอบราคา</div><div class="item-meta"><span class="tag tag-project">1291 สิริเพลส พัฒนาการ</span><span class="tag tag-person">บัณยนุช</span><span class="tag tag-due urgent">วันนี้</span></div><div class="item-who" id="who-today-1"></div></div></div>
+      <div class="item" data-key="today-2" onclick="toggle(this)"><div class="checkbox"><span class="checkbox-tick">✓</span></div><div class="item-content"><div class="item-title">ตรวจ End — ส่งงานครั้งที่35</div><div class="item-meta"><span class="tag tag-project">4112 GPN วัดส้มเกลี้ยง</span><span class="tag tag-person">ปัฐพัน</span><span class="tag tag-due urgent">วันนี้</span></div><div class="item-who" id="who-today-2"></div></div></div>
+      <div class="item" data-key="today-3" onclick="toggle(this)"><div class="checkbox"><span class="checkbox-tick">✓</span></div><div class="item-content"><div class="item-title">ได้รับเงิน — ติดตามการรับเงิน</div><div class="item-meta"><span class="tag tag-project">4108 พลีโน่ทาวน์ วัดบางม่วง</span><span class="tag tag-person">มะปราง</span><span class="tag tag-due urgent">วันนี้</span></div><div class="item-who" id="who-today-3"></div></div></div>
+      <div class="item" data-key="today-4" onclick="toggle(this)"><div class="checkbox"><span class="checkbox-tick">✓</span></div><div class="item-content"><div class="item-title">แผนงานวางท่อ บ่อพัก ระบบบำบัดน้ำเสีย</div><div class="item-meta"><span class="tag tag-project">1178 คณาสิริ เอแบค บางนา</span><span class="tag tag-person">วสันต์</span><span class="tag tag-due urgent">วันนี้ 20:00</span></div><div class="item-who" id="who-today-4"></div></div></div>
+      <div class="item" data-key="today-5" onclick="toggle(this)"><div class="checkbox"><span class="checkbox-tick">✓</span></div><div class="item-content"><div class="item-title">งานเพิ่มเติม ขยายขนาดถนนตามผังจัดสรร</div><div class="item-meta"><span class="tag tag-project">1291 สิริเพลส พัฒนาการ</span><span class="tag tag-person">วสันต์</span><span class="tag tag-due urgent">วันนี้ 21:00</span></div><div class="item-who" id="who-today-5"></div></div></div>
+      <div class="item" data-key="today-6" onclick="toggle(this)"><div class="checkbox"><span class="checkbox-tick">✓</span></div><div class="item-content"><div class="item-title">งานเพิ่มเติม แก้ไขที่กลับรถทรุดตัว</div><div class="item-meta"><span class="tag tag-project">1291 สิริเพลส พัฒนาการ</span><span class="tag tag-person">วสันต์</span><span class="tag tag-due urgent">วันนี้ 22:00</span></div><div class="item-who" id="who-today-6"></div></div></div>
+      <div class="item" data-key="today-7" onclick="toggle(this)"><div class="checkbox"><span class="checkbox-tick">✓</span></div><div class="item-content"><div class="item-title">ชอปเหล็กฉากปากบ่อ ฝาบ่อ ตะแกรงดักขยะ ระบบบำบัดน้ำเสียรวม</div><div class="item-meta"><span class="tag tag-project">1178 คณาสิริ เอแบค บางนา</span><span class="tag tag-person">วสันต์</span><span class="tag tag-due urgent">วันนี้</span></div><div class="item-who" id="who-today-7"></div></div></div>
+    </div>
+  </div>
+
+  <!-- 🟣 การเงิน -->
+  <div class="section s-purple" id="sec-finance">
+    <div class="section-header" onclick="toggleSection('sec-finance')">
+      <div class="dot"></div>
+      <div class="section-title">🟣 การเงิน ผรม. งวดเม.ย. (Due 10 พ.ค.)</div>
+      <span class="section-count" id="count-sec-finance">—</span>
+      <span class="section-chevron">▼</span>
+    </div>
+    <div class="section-body">
+      <div class="item" data-key="fin-1" onclick="toggle(this)"><div class="checkbox"><span class="checkbox-tick">✓</span></div><div class="item-content"><div class="item-title">รายการส่งงานช่างพิเชษ งวด 1-30/เม.ย.</div><div class="item-meta"><span class="tag tag-person">บัณยนุช / เบนซ์ / OmiJang</span><span class="tag tag-due">10 พ.ค.</span></div><div class="item-who" id="who-fin-1"></div></div></div>
+      <div class="item" data-key="fin-2" onclick="toggle(this)"><div class="checkbox"><span class="checkbox-tick">✓</span></div><div class="item-content"><div class="item-title">รายการส่งงานช่างวินัย งวด 1-30/เม.ย. (ชุด 1)</div><div class="item-meta"><span class="tag tag-person">บัณยนุช / ปัฐพัน / OmiJang</span><span class="tag tag-due">10 พ.ค.</span></div><div class="item-who" id="who-fin-2"></div></div></div>
+      <div class="item" data-key="fin-3" onclick="toggle(this)"><div class="checkbox"><span class="checkbox-tick">✓</span></div><div class="item-content"><div class="item-title">รายการส่งงานช่างวินัย งวด 1-30/เม.ย. (ชุด 2)</div><div class="item-meta"><span class="tag tag-person">บัณยนุช / ปัฐพัน / OmiJang / วินัย</span><span class="tag tag-due">10 พ.ค.</span></div><div class="item-who" id="who-fin-3"></div></div></div>
+      <div class="item" data-key="fin-4" onclick="toggle(this)"><div class="checkbox"><span class="checkbox-tick">✓</span></div><div class="item-content"><div class="item-title">รายการส่งงานช่างนาวี งวด 1-30/เม.ย. (ชุด 1)</div><div class="item-meta"><span class="tag tag-person">บัณยนุช / ปัฐพัน / OmiJang</span><span class="tag tag-due">10 พ.ค.</span></div><div class="item-who" id="who-fin-4"></div></div></div>
+      <div class="item" data-key="fin-5" onclick="toggle(this)"><div class="checkbox"><span class="checkbox-tick">✓</span></div><div class="item-content"><div class="item-title">รายการส่งงานช่างนาวี งวด 1-30/เม.ย. (ชุด 2)</div><div class="item-meta"><span class="tag tag-person">บัณยนุช / ปัฐพัน / OmiJang</span><span class="tag tag-due">10 พ.ค.</span></div><div class="item-who" id="who-fin-5"></div></div></div>
+      <div class="item" data-key="fin-6" onclick="toggle(this)"><div class="checkbox"><span class="checkbox-tick">✓</span></div><div class="item-content"><div class="item-title">รายการส่งงานช่างเลิศ งวด 1-30/เม.ย.</div><div class="item-meta"><span class="tag tag-person">บัณยนุช / เบนซ์ / OmiJang</span><span class="tag tag-due">10 พ.ค.</span></div><div class="item-who" id="who-fin-6"></div></div></div>
+      <div class="item" data-key="fin-7" onclick="toggle(this)"><div class="checkbox"><span class="checkbox-tick">✓</span></div><div class="item-content"><div class="item-title">รายการส่งงานช่างปาล์ม งวด 1-30/เม.ย.</div><div class="item-meta"><span class="tag tag-person">บัณยนุช / เบนซ์ / สันติชัย / OmiJang</span><span class="tag tag-due">10 พ.ค.</span></div><div class="item-who" id="who-fin-7"></div></div></div>
+      <div class="item" data-key="fin-8" onclick="toggle(this)"><div class="checkbox"><span class="checkbox-tick">✓</span></div><div class="item-content"><div class="item-title">รายการส่งงานช่างเหมือน งวด 1-30/เม.ย.</div><div class="item-meta"><span class="tag tag-person">บัณยนุช / เบนซ์ / OmiJang</span><span class="tag tag-due">10 พ.ค.</span></div><div class="item-who" id="who-fin-8"></div></div></div>
+      <div class="item" data-key="fin-9" onclick="toggle(this)"><div class="checkbox"><span class="checkbox-tick">✓</span></div><div class="item-content"><div class="item-title">รายการส่งงานช่างซานเฮง งวด 1-30/เม.ย.</div><div class="item-meta"><span class="tag tag-person">บัณยนุช / OmiJang</span><span class="tag tag-due">10 พ.ค.</span></div><div class="item-who" id="who-fin-9"></div></div></div>
+      <div class="item" data-key="fin-10" onclick="toggle(this)"><div class="checkbox"><span class="checkbox-tick">✓</span></div><div class="item-content"><div class="item-title">รายการส่งงานช่างแดง งวด 1-30/เม.ย.</div><div class="item-meta"><span class="tag tag-person">บัณยนุช / ปัฐพัน / OmiJang</span><span class="tag tag-due">10 พ.ค.</span></div><div class="item-who" id="who-fin-10"></div></div></div>
+    </div>
+  </div>
+
+  <!-- 🟡 สัปดาห์นี้ -->
+  <div class="section s-yellow" id="sec-week">
+    <div class="section-header" onclick="toggleSection('sec-week')">
+      <div class="dot"></div>
+      <div class="section-title">🟡 สัปดาห์นี้ (Due ภายใน 17 พ.ค.)</div>
+      <span class="section-count" id="count-sec-week">—</span>
+      <span class="section-chevron">▼</span>
+    </div>
+    <div class="section-body">
+      <div class="item" data-key="week-1" onclick="toggle(this)"><div class="checkbox"><span class="checkbox-tick">✓</span></div><div class="item-content"><div class="item-title">ส่งเอกสารที่โครงการ ขอลายเซนต์</div><div class="item-meta"><span class="tag tag-project">1291 สิริเพลส พัฒนาการ</span><span class="tag tag-person">มะปราง</span><span class="tag tag-due">9 พ.ค.</span></div><div class="item-who" id="who-week-1"></div></div></div>
+      <div class="item" data-key="week-2" onclick="toggle(this)"><div class="checkbox"><span class="checkbox-tick">✓</span></div><div class="item-content"><div class="item-title">งานเพิ่มเติม คันหินพันเข้าหน้าบ้าน ชุดที่1</div><div class="item-meta"><span class="tag tag-project">4108 วัดบางม่วง</span><span class="tag tag-person">บัณยนุช / มะปราง</span><span class="tag tag-due">17 พ.ค.</span></div><div class="item-who" id="who-week-2"></div></div></div>
+    </div>
+  </div>
+
+  <!-- 🟢 Ongoing -->
+  <div class="section s-green" id="sec-ongoing">
+    <div class="section-header" onclick="toggleSection('sec-ongoing')">
+      <div class="dot"></div>
+      <div class="section-title">🟢 Ongoing ใกล้ครบกำหนด (Due 24–31 พ.ค.)</div>
+      <span class="section-count" id="count-sec-ongoing">—</span>
+      <span class="section-chevron">▼</span>
+    </div>
+    <div class="section-body">
+      <div class="item" data-key="ong-1" onclick="toggle(this)"><div class="checkbox"><span class="checkbox-tick">✓</span></div><div class="item-content"><div class="item-title">ส่งงานครั้งที่35</div><div class="item-meta"><span class="tag tag-project">4112 GPN วัดส้มเกลี้ยง</span><span class="tag tag-person">บัณยนุช / มะปราง</span><span class="tag tag-due">24 พ.ค.</span></div><div class="item-who" id="who-ong-1"></div></div></div>
+      <div class="item" data-key="ong-2" onclick="toggle(this)"><div class="checkbox"><span class="checkbox-tick">✓</span></div><div class="item-content"><div class="item-title">รายการส่งงาน งานถนนในโครงการ LOT2 ครั้งที่10</div><div class="item-meta"><span class="tag tag-project">1326 นาราสิริ บางนา กม10</span><span class="tag tag-person">บัณยนุช / มะปราง</span><span class="tag tag-due">24 พ.ค.</span></div><div class="item-who" id="who-ong-2"></div></div></div>
+      <div class="item" data-key="ong-3" onclick="toggle(this)"><div class="checkbox"><span class="checkbox-tick">✓</span></div><div class="item-content"><div class="item-title">รายการส่งงาน เฟส2 ครั้งที่6</div><div class="item-meta"><span class="tag tag-project">1291 สิริเพลส พัฒนาการ</span><span class="tag tag-person">บัณยนุช / มะปราง</span><span class="tag tag-due">24 พ.ค.</span></div><div class="item-who" id="who-ong-3"></div></div></div>
+      <div class="item" data-key="ong-4" onclick="toggle(this)"><div class="checkbox"><span class="checkbox-tick">✓</span></div><div class="item-content"><div class="item-title">ส่งงานถนนในโครงการ ครั้งที่7</div><div class="item-meta"><span class="tag tag-project">1320 เดมี2 สาธุประดิษ49</span><span class="tag tag-person">บัณยนุช / มะปราง</span><span class="tag tag-due">24 พ.ค.</span></div><div class="item-who" id="who-ong-4"></div></div></div>
+      <div class="item" data-key="ong-5" onclick="toggle(this)"><div class="checkbox"><span class="checkbox-tick">✓</span></div><div class="item-content"><div class="item-title">ส่งงานถนนภาระจำยอม ครั้งที่5</div><div class="item-meta"><span class="tag tag-project">1320 เดมี2 สาธุประดิษ49</span><span class="tag tag-person">บัณยนุช / มะปราง</span><span class="tag tag-due">24 พ.ค.</span></div><div class="item-who" id="who-ong-5"></div></div></div>
+      <div class="item" data-key="ong-6" onclick="toggle(this)"><div class="checkbox"><span class="checkbox-tick">✓</span></div><div class="item-content"><div class="item-title">รายการส่งงาน ครั้งที่21</div><div class="item-meta"><span class="tag tag-project">7119 GPN เพิ่มสิน28</span><span class="tag tag-person">บัณยนุช / มะปราง</span><span class="tag tag-due">31 พ.ค.</span></div><div class="item-who" id="who-ong-6"></div></div></div>
+      <div class="item" data-key="ong-7" onclick="toggle(this)"><div class="checkbox"><span class="checkbox-tick">✓</span></div><div class="item-content"><div class="item-title">รายการส่งงาน ครั้งที่32</div><div class="item-meta"><span class="tag tag-project">7053 BKM เดอะวอล์ค</span><span class="tag tag-person">บัณยนุช / มะปราง</span><span class="tag tag-due">31 พ.ค.</span></div><div class="item-who" id="who-ong-7"></div></div></div>
+    </div>
+  </div>
+
+  <button class="refresh-btn" onclick="loadFromSheet()">↻ โหลดสถานะล่าสุดจาก Sheet</button>
+  <footer>THC Daily Checklist · Synced with Google Sheets · <span id="lastSync">ยังไม่ได้ sync</span></footer>
+</div>
+
+<script>
+const CLIENT_ID = '782871740460-452t7k8o1hrbgp1blhbc05n035dkokss.apps.googleusercontent.com';
+const SCOPES = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file';
+const SHEET_NAME = 'Checklist';
+const LS_SHEET = 'thc-checklist-sheetId';
+
+let accessToken = null;
+let currentUser = null;
+let sheetId = localStorage.getItem(LS_SHEET) || null;
+let autoRefreshTimer = null;
+
+// ── GOOGLE SIGN IN ──────────────────────────────────────
+function signIn() {
+  const client = google.accounts.oauth2.initTokenClient({
+    client_id: CLIENT_ID,
+    scope: SCOPES,
+    callback: async (resp) => {
+      if (resp.error) { alert('Login ไม่สำเร็จ: ' + resp.error); return; }
+      accessToken = resp.access_token;
+      await fetchUserInfo();
+      showApp();
+    }
+  });
+  client.requestAccessToken();
+}
+
+async function fetchUserInfo() {
+  const r = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+    headers: { Authorization: 'Bearer ' + accessToken }
+  });
+  currentUser = await r.json();
+}
+
+function signOut() {
+  google.accounts.oauth2.revoke(accessToken, () => {});
+  accessToken = null; currentUser = null;
+  clearInterval(autoRefreshTimer);
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'flex';
+}
+
+function showApp() {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('userName').textContent = currentUser.name || currentUser.email;
+  document.getElementById('userEmail').textContent = currentUser.email;
+  document.getElementById('userAvatar').textContent = (currentUser.name || currentUser.email)[0].toUpperCase();
+  if (sheetId) {
+    document.getElementById('setupBar').style.display = 'none';
+    document.getElementById('sheetIdInput').value = sheetId;
+    loadFromSheet();
+    autoRefreshTimer = setInterval(loadFromSheet, 30000);
+  }
+}
+
+// ── SHEET SETUP ──────────────────────────────────────────
+function saveSheetId() {
+  const val = document.getElementById('sheetIdInput').value.trim();
+  if (!val) { alert('กรุณากรอก Spreadsheet ID'); return; }
+  sheetId = val;
+  localStorage.setItem(LS_SHEET, sheetId);
+  document.getElementById('setupBar').style.display = 'none';
+  loadFromSheet();
+  autoRefreshTimer = setInterval(loadFromSheet, 30000);
+}
+
+async function createNewSheet() {
+  setSyncStatus('กำลังสร้าง Google Sheet ใหม่...', 'syncing');
+  try {
+    // Create spreadsheet
+    const r = await fetch('https://sheets.googleapis.com/v4/spreadsheets', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + accessToken, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ properties: { title: 'THC Checklist 08-05-2569' }, sheets: [{ properties: { title: SHEET_NAME } }] })
+    });
+    const data = await r.json();
+    sheetId = data.spreadsheetId;
+    localStorage.setItem(LS_SHEET, sheetId);
+    document.getElementById('sheetIdInput').value = sheetId;
+
+    // Write header row
+    await writeHeader();
+
+    document.getElementById('setupBar').style.display = 'none';
+    setSyncStatus('✅ สร้าง Sheet สำเร็จ! ID: ' + sheetId, 'ok');
+    await loadFromSheet();
+    autoRefreshTimer = setInterval(loadFromSheet, 30000);
+
+    // Show sheet link
+    alert('สร้าง Sheet สำเร็จ!\n\nSpreadsheet ID:\n' + sheetId + '\n\nลิงก์:\nhttps://docs.google.com/spreadsheets/d/' + sheetId);
+  } catch(e) {
+    setSyncStatus('❌ สร้าง Sheet ไม่สำเร็จ: ' + e.message, 'err');
+  }
+}
+
+async function writeHeader() {
+  const keys = getAllKeys();
+  const values = [['key', 'done', 'doneby_name', 'doneby_email', 'timestamp']];
+  keys.forEach(k => values.push([k, 'FALSE', '', '', '']));
+  await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${SHEET_NAME}!A1:E${values.length}?valueInputOption=RAW`, {
+    method: 'PUT',
+    headers: { Authorization: 'Bearer ' + accessToken, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ values })
+  });
+}
+
+function getAllKeys() {
+  return [...document.querySelectorAll('.item[data-key]')].map(el => el.dataset.key);
+}
+
+// ── LOAD FROM SHEET ───────────────────────────────────────
+async function loadFromSheet() {
+  if (!sheetId || !accessToken) return;
+  setSyncStatus('⏳ กำลังโหลด...', 'syncing');
+  try {
+    const r = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${SHEET_NAME}!A2:E200`, {
+      headers: { Authorization: 'Bearer ' + accessToken }
+    });
+    const data = await r.json();
+    const rows = data.values || [];
+    const map = {};
+    rows.forEach(row => { if (row[0]) map[row[0]] = { done: row[1] === 'TRUE', name: row[2] || '', email: row[3] || '', time: row[4] || '' }; });
+
+    document.querySelectorAll('.item[data-key]').forEach(el => {
+      const key = el.dataset.key;
+      const state = map[key];
+      if (state) {
+        el.classList.toggle('done', state.done);
+        const whoEl = document.getElementById('who-' + key);
+        if (whoEl) whoEl.textContent = state.done && state.name ? '✓ ติ๊กโดย ' + state.name + (state.time ? ' · ' + state.time : '') : '';
+      }
+    });
+
+    updateProgress();
+    const now = new Date().toLocaleTimeString('th-TH');
+    setSyncStatus('✅ อัปเดตล่าสุด ' + now, 'ok');
+    document.getElementById('lastSync').textContent = now;
+  } catch(e) {
+    setSyncStatus('❌ โหลดไม่สำเร็จ: ' + e.message, 'err');
+  }
+}
+
+// ── TOGGLE ───────────────────────────────────────────────
+async function toggle(el) {
+  if (!sheetId) { alert('กรุณาตั้งค่า Google Sheet ก่อนครับ'); return; }
+  if (!accessToken) { alert('กรุณา Login ก่อนครับ'); return; }
+  if (el.classList.contains('loading')) return;
+
+  const key = el.dataset.key;
+  const newDone = !el.classList.contains('done');
+  el.classList.add('loading');
+
+  try {
+    // Find row
+    const r = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${SHEET_NAME}!A:A`, {
+      headers: { Authorization: 'Bearer ' + accessToken }
+    });
+    const data = await r.json();
+    const rows = data.values || [];
+    let rowIndex = rows.findIndex(r => r[0] === key);
+
+    const now = new Date().toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' });
+    const name = currentUser.name || currentUser.email;
+    const email = currentUser.email;
+
+    if (rowIndex === -1) {
+      // Append new row
+      await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${SHEET_NAME}!A:E:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`, {
+        method: 'POST',
+        headers: { Authorization: 'Bearer ' + accessToken, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ values: [[key, String(newDone).toUpperCase(), newDone ? name : '', newDone ? email : '', newDone ? now : '']] })
+      });
+    } else {
+      // Update existing row
+      const sheetRow = rowIndex + 1;
+      await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${SHEET_NAME}!A${sheetRow}:E${sheetRow}?valueInputOption=RAW`, {
+        method: 'PUT',
+        headers: { Authorization: 'Bearer ' + accessToken, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ values: [[key, String(newDone).toUpperCase(), newDone ? name : '', newDone ? email : '', newDone ? now : '']] })
+      });
+    }
+
+    el.classList.toggle('done', newDone);
+    const whoEl = document.getElementById('who-' + key);
+    if (whoEl) whoEl.textContent = newDone ? '✓ ติ๊กโดย ' + name + ' · ' + now : '';
+    updateProgress();
+    setSyncStatus('✅ บันทึกสำเร็จ', 'ok');
+  } catch(e) {
+    setSyncStatus('❌ บันทึกไม่สำเร็จ: ' + e.message, 'err');
+  } finally {
+    el.classList.remove('loading');
+  }
+}
+
+// ── UI HELPERS ────────────────────────────────────────────
+function toggleSection(id) {
+  document.getElementById(id).classList.toggle('collapsed');
+}
+
+function updateProgress() {
+  const all = document.querySelectorAll('.item[data-key]').length;
+  const done = document.querySelectorAll('.item[data-key].done').length;
+  document.getElementById('progressBar').style.width = all ? (done/all*100) + '%' : '0%';
+  document.getElementById('progressLabel').textContent = done + ' / ' + all + ' เสร็จแล้ว';
+
+  document.querySelectorAll('.section').forEach(sec => {
+    const items = sec.querySelectorAll('.item[data-key]').length;
+    const doneC = sec.querySelectorAll('.item[data-key].done').length;
+    const id = sec.id;
+    const countEl = document.getElementById('count-' + id);
+    if (countEl) countEl.textContent = doneC + '/' + items;
+  });
+}
+
+function setSyncStatus(msg, cls) {
+  const el = document.getElementById('syncStatus');
+  el.textContent = msg;
+  el.className = 'sync-status ' + (cls || '');
+}
+
+updateProgress();
+</script>
+</body>
+</html>
