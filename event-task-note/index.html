@@ -291,14 +291,11 @@
     </div>
 
     <label>โครงการ</label>
-    <select id="f_project" class="focus-ring">
-      <option value="">— ไม่ระบุโครงการ —</option>
-      <option value="7140 GPN เทพารักษ์ 112">7140 GPN เทพารักษ์ 112</option>
-      <option value="1178 คณาสิริ เอแบค บางนา">1178 คณาสิริ เอแบค บางนา</option>
-      <option value="1291 สิริเพลส พัฒนาการ">1291 สิริเพลส พัฒนาการ</option>
-      <option value="1305 สารานรมย์ รามคำแหง">1305 สารานรมย์ รามคำแหง</option>
-      <option value="DOH-163 M7 Section 3">DOH-163 M7 Section 3</option>
-    </select>
+    <div style="display:flex; gap:8px;">
+      <input type="text" id="f_project" list="projectList" class="focus-ring" placeholder="พิมพ์ค้นหา หรือเลือกโครงการ..." autocomplete="off" style="flex:1;">
+      <datalist id="projectList"></datalist>
+    </div>
+    <div id="projectHint" style="font-size:11px; color:var(--ink-soft); margin-top:5px;"></div>
 
     <label id="detailLabel">รายละเอียด</label>
     <textarea id="f_detail" class="focus-ring" placeholder="รายละเอียดเพิ่มเติม..."></textarea>
@@ -322,6 +319,65 @@ const SCOPES = "https://www.googleapis.com/auth/calendar.events";
 const CALENDAR_ID = "primary"; // เปลี่ยนเป็น Taskworld calendar id ได้ถ้าต้องการสร้างลงปฏิทินนั้นแทน
 const TASK_TAG = "[TASK]";
 const NOTES_KEY = "thc_etn_notes_v1";
+const PROJECTS_KEY = "thc_etn_projects_v1";
+
+const DEFAULT_PROJECTS = [
+  "60_DOH-163/2569_M7 ตอน3 งานแก้ไขและป้องกันน้ำกัดเซาะ",
+  "59_1178_คณาสิริ เอแบค บางนา",
+  "58_7140_GPN เทพารักษ์112",
+  "57_1370_อณาสิริ รามคำแหง2",
+  "56_1320_เดมี2 สาธุ49",
+  "55_4182_GPN บางปู39",
+  "52_CR02_เฌอรีน วัชรพล",
+  "51_1326_นาราสิริ บางนา กม10",
+  "48_4144_PNT เพชรเกษม91",
+  "46_4134_PNT ตำหรุ",
+  "45_7130_GPN อิเกีย3",
+  "42_7119_GPN เพิ่มสิน28",
+  "36_4112_GPN วัดส้มเกลี้ยง",
+  "35_4108_PNT วัดบางม่วง",
+  "31_7091_GPN อิเกีย1",
+  "30_2047_APT ฉะเชิงเทรา",
+  "22_1305_สราญสิริ รามคำแหง",
+  "20_1287_อณาสิริ รามคำแหง",
+  "19_1291_สิริเพลส พัฒนาการ",
+  "15_2031_APT อยุธยา",
+  "14_7053_BKM เดอะวอล์ค"
+];
+
+function loadProjects(){
+  try{
+    const raw = localStorage.getItem(PROJECTS_KEY);
+    const extra = raw ? JSON.parse(raw) : [];
+    const merged = [...DEFAULT_PROJECTS];
+    extra.forEach(p=>{ if(!merged.includes(p)) merged.push(p); });
+    return merged;
+  }catch(e){ return [...DEFAULT_PROJECTS]; }
+}
+function addProjectIfNew(name){
+  if(!name || !name.trim()) return;
+  name = name.trim();
+  const all = loadProjects();
+  if(all.includes(name)) return;
+  let extra = [];
+  try{ extra = JSON.parse(localStorage.getItem(PROJECTS_KEY) || "[]"); }catch(e){}
+  extra.push(name);
+  localStorage.setItem(PROJECTS_KEY, JSON.stringify(extra));
+}
+function populateProjectList(){
+  const dl = document.getElementById('projectList');
+  dl.innerHTML = loadProjects().map(p=>`<option value="${escapeHtml(p)}"></option>`).join('');
+}
+function updateProjectHint(){
+  const val = document.getElementById('f_project').value.trim();
+  const hint = document.getElementById('projectHint');
+  if(val && !loadProjects().includes(val)){
+    hint.textContent = `+ จะเพิ่ม "${val}" เป็นโครงการใหม่`;
+    hint.style.color = "var(--task)";
+  } else {
+    hint.textContent = "";
+  }
+}
 
 let tokenClient;
 let accessToken = null;
@@ -330,6 +386,7 @@ let currentFilter = "all";
 
 /* ============== GOOGLE AUTH ============== */
 window.onload = () => {
+  populateProjectList();
   loadNotesOnly(); // แสดง note ได้ทันทีแม้ยังไม่ login
   renderTimeline();
 
@@ -560,6 +617,8 @@ function openModal(type){
   document.getElementById('f_detail').value = "";
   document.getElementById('f_done').checked = false;
   document.getElementById('delBtn').style.display = "none";
+  document.getElementById('projectHint').textContent = "";
+  populateProjectList();
 
   setupModalForType(type);
   document.getElementById('overlay').classList.add('show');
@@ -579,6 +638,8 @@ function openEdit(type, id){
   document.getElementById('f_detail').value = it.detail || "";
   document.getElementById('f_done').checked = !!it.done;
   document.getElementById('delBtn').style.display = "block";
+  populateProjectList();
+  updateProjectHint();
 
   setupModalForType(type);
   document.getElementById('overlay').classList.add('show');
@@ -603,6 +664,8 @@ function setupModalForType(type){
     saveBtn.textContent = 'บันทึก';
   }
 }
+
+document.getElementById('f_project').addEventListener('input', updateProjectHint);
 
 function closeModal(){
   document.getElementById('overlay').classList.remove('show');
@@ -634,6 +697,8 @@ async function saveItem(){
 
   if(!title){ alert('กรุณากรอกหัวข้อ'); return; }
   if(!date){ alert('กรุณาเลือกวันที่'); return; }
+
+  addProjectIfNew(project);
 
   if(type === 'note'){
     saveNoteItem(id, title, date, project, detail);
