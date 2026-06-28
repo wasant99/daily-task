@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ไทม์ไลน์งาน — THC</title>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#FAF8F4;
+    --ink:#2B2520;
+    --ink-soft:#6B6258;
+    --line:#E2DCD0;
+    --card:#FFFFFF;
+    --event:#2563A8;
+    --event-soft:#E7EEF6;
+    --task:#C2641A;
+    --task-soft:#FBE9DB;
+    --note:#6B6258;
+    --note-soft:#EDEAE4;
+    --done:#3F8F5F;
+    --done-soft:#E1F0E6;
+    --danger:#B23A2E;
+    --shadow: 0 1px 2px rgba(43,37,32,0.06), 0 4px 16px rgba(43,37,32,0.04);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Sarabun',sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .mono{font-family:'JetBrains Mono',monospace;}
+
+  /* ===== Header ===== */
+  header{
+    position:sticky; top:0; z-index:30;
+    background:var(--bg);
+    border-bottom:1px solid var(--line);
+    padding:14px 16px 12px;
+  }
+  .header-row{display:flex; align-items:center; justify-content:space-between; gap:10px;}
+  .brand{display:flex; align-items:baseline; gap:8px;}
+  .brand .mark{
+    width:26px; height:26px;
+    background:var(--ink);
+    clip-path: polygon(15% 0, 100% 0, 85% 100%, 0 100%);
+    flex-shrink:0;
+  }
+  .brand h1{font-size:17px; font-weight:700; margin:0; letter-spacing:-0.2px;}
+  .brand .sub{font-size:11px; color:var(--ink-soft); font-family:'JetBrains Mono',monospace;}
+
+  #authBtn{
+    border:1px solid var(--ink); background:var(--ink); color:#fff;
+    font-family:'Sarabun',sans-serif; font-weight:600; font-size:13px;
+    padding:8px 14px; border-radius:7px; cursor:pointer;
+  }
+  #authBtn.connected{background:var(--done); border-color:var(--done);}
+  #authBtn:active{transform:translateY(1px);}
+
+  .filter-row{
+    display:flex; gap:6px; margin-top:12px; overflow-x:auto; padding-bottom:2px;
+    -ms-overflow-style:none; scrollbar-width:none;
+  }
+  .filter-row::-webkit-scrollbar{display:none;}
+  .chip{
+    flex-shrink:0;
+    border:1px solid var(--line); background:var(--card);
+    color:var(--ink-soft); font-size:12.5px; font-weight:500;
+    padding:6px 12px; border-radius:20px; cursor:pointer; white-space:nowrap;
+    transition:all .15s;
+  }
+  .chip.active{background:var(--ink); color:#fff; border-color:var(--ink);}
+
+  /* ===== Add bar ===== */
+  .add-bar{
+    display:flex; gap:8px; padding:10px 16px; background:var(--bg);
+    border-bottom:1px solid var(--line);
+  }
+  .add-bar button{
+    flex:1; border:1.5px dashed var(--line); background:transparent;
+    border-radius:9px; padding:10px 8px; font-family:'Sarabun',sans-serif;
+    font-size:12.5px; font-weight:600; cursor:pointer; color:var(--ink-soft);
+    display:flex; flex-direction:column; align-items:center; gap:3px;
+  }
+  .add-bar button .ic{font-size:16px;}
+  .add-bar button.ev{color:var(--event); border-color:var(--event-soft);}
+  .add-bar button.tk{color:var(--task); border-color:var(--task-soft);}
+  .add-bar button.nt{color:var(--note); border-color:var(--line);}
+  .add-bar button:active{transform:scale(0.97);}
+
+  /* ===== Timeline ===== */
+  main{padding:18px 16px 100px; max-width:640px; margin:0 auto;}
+  .day-group{position:relative; padding-left:34px; margin-bottom:22px;}
+  .day-group::before{
+    content:''; position:absolute; left:10px; top:26px; bottom:-22px;
+    width:1.5px; background:var(--line);
+  }
+  .day-group:last-child::before{display:none;}
+  .day-label{
+    display:flex; align-items:center; gap:8px; margin-bottom:10px; position:relative;
+  }
+  .day-dot{
+    position:absolute; left:-34px; top:1px;
+    width:21px; height:21px; background:var(--ink);
+    clip-path: polygon(20% 0, 100% 0, 80% 100%, 0 100%);
+    flex-shrink:0;
+  }
+  .day-dot.today{background:var(--danger);}
+  .day-label .d{font-size:14.5px; font-weight:700;}
+  .day-label .rel{font-size:11.5px; color:var(--ink-soft); font-family:'JetBrains Mono',monospace;}
+
+  .item{
+    background:var(--card); border:1px solid var(--line); border-radius:11px;
+    padding:11px 13px; margin-bottom:8px; box-shadow:var(--shadow);
+    display:flex; gap:10px; cursor:pointer;
+  }
+  .item:active{transform:scale(0.99);}
+  .item .bar{width:3.5px; border-radius:3px; flex-shrink:0;}
+  .item.event .bar{background:var(--event);}
+  .item.task .bar{background:var(--task);}
+  .item.task.done .bar{background:var(--done);}
+  .item.note .bar{background:var(--note);}
+
+  .item .body{flex:1; min-width:0;}
+  .item .toprow{display:flex; align-items:center; gap:6px; margin-bottom:3px;}
+  .badge{
+    font-size:10px; font-weight:700; padding:2px 6px; border-radius:5px;
+    font-family:'JetBrains Mono',monospace; letter-spacing:0.3px; flex-shrink:0;
+  }
+  .badge.event{background:var(--event-soft); color:var(--event);}
+  .badge.task{background:var(--task-soft); color:var(--task);}
+  .badge.task.done{background:var(--done-soft); color:var(--done);}
+  .badge.note{background:var(--note-soft); color:var(--note);}
+  .item-time{font-size:11px; color:var(--ink-soft); font-family:'JetBrains Mono',monospace; flex-shrink:0;}
+  .item-title{font-size:14px; font-weight:600; line-height:1.35; word-break:break-word;}
+  .item-title.strike{text-decoration:line-through; color:var(--ink-soft); font-weight:500;}
+  .item-meta{display:flex; gap:6px; margin-top:5px; flex-wrap:wrap;}
+  .tag{
+    font-size:10.5px; color:var(--ink-soft); background:var(--bg);
+    border:1px solid var(--line); padding:1.5px 7px; border-radius:5px;
+  }
+  .check{
+    width:20px; height:20px; border-radius:50%; border:2px solid var(--task);
+    flex-shrink:0; margin-top:1px; display:flex; align-items:center; justify-content:center;
+    background:#fff;
+  }
+  .check.done{background:var(--done); border-color:var(--done); color:#fff; font-size:12px;}
+
+  .empty{
+    text-align:center; padding:60px 20px; color:var(--ink-soft);
+  }
+  .empty .ic{font-size:32px; margin-bottom:10px; opacity:0.5;}
+  .empty p{font-size:13.5px; margin:0; line-height:1.6;}
+
+  .loading{text-align:center; padding:40px; color:var(--ink-soft); font-size:13px;}
+  .spin{
+    width:22px; height:22px; border:2.5px solid var(--line); border-top-color:var(--ink);
+    border-radius:50%; margin:0 auto 10px; animation:sp 0.7s linear infinite;
+  }
+  @keyframes sp{to{transform:rotate(360deg);}}
+
+  /* ===== Modal ===== */
+  .overlay{
+    position:fixed; inset:0; background:rgba(43,37,32,0.45);
+    z-index:50; display:none; align-items:flex-end; justify-content:center;
+  }
+  .overlay.show{display:flex;}
+  .sheet{
+    background:var(--bg); width:100%; max-width:640px;
+    border-radius:18px 18px 0 0; padding:18px 18px 26px;
+    max-height:88vh; overflow-y:auto;
+    animation:up .22s ease-out;
+  }
+  @keyframes up{from{transform:translateY(16px); opacity:0;} to{transform:translateY(0); opacity:1;}}
+  .sheet-head{display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;}
+  .sheet-head h2{font-size:16px; font-weight:700; margin:0; display:flex; align-items:center; gap:8px;}
+  .sheet-head .dot{width:9px; height:9px; border-radius:2px;}
+  .sheet-head .dot.event{background:var(--event);}
+  .sheet-head .dot.task{background:var(--task);}
+  .sheet-head .dot.note{background:var(--note);}
+  .x-close{
+    width:30px; height:30px; border-radius:50%; border:none; background:var(--line);
+    color:var(--ink); font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center;
+  }
+
+  label{display:block; font-size:12px; font-weight:600; color:var(--ink-soft); margin:14px 0 6px;}
+  label:first-of-type{margin-top:0;}
+  input[type=text], input[type=date], input[type=time], select, textarea{
+    width:100%; border:1.5px solid var(--line); background:var(--card);
+    border-radius:9px; padding:10px 12px; font-family:'Sarabun',sans-serif;
+    font-size:14px; color:var(--ink); outline:none;
+  }
+  textarea{resize:vertical; min-height:64px;}
+  input:focus, select:focus, textarea:focus{border-color:var(--ink);}
+  .row2{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+
+  .save-btn{
+    width:100%; margin-top:18px; padding:13px; border:none; border-radius:10px;
+    background:var(--ink); color:#fff; font-family:'Sarabun',sans-serif;
+    font-weight:700; font-size:14.5px; cursor:pointer;
+  }
+  .save-btn:active{transform:scale(0.99);}
+  .save-btn.event{background:var(--event);}
+  .save-btn.task{background:var(--task);}
+  .save-btn.note{background:var(--note);}
+
+  .del-btn{
+    width:100%; margin-top:8px; padding:11px; border:1.5px solid var(--danger);
+    border-radius:10px; background:transparent; color:var(--danger);
+    font-family:'Sarabun',sans-serif; font-weight:600; font-size:13.5px; cursor:pointer;
+  }
+
+  .focus-ring:focus-visible{outline:2px solid var(--ink); outline-offset:2px;}
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation:none !important; transition:none !important;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-row">
+    <div class="brand">
+      <div class="mark"></div>
+      <div>
+        <h1>ไทม์ไลน์งาน</h1>
+        <div class="sub">THC · TW-JAKIT GROUP</div>
+      </div>
+    </div>
+    <button id="authBtn" class="focus-ring">เชื่อม Calendar</button>
+  </div>
+  <div class="filter-row" id="filterRow">
+    <div class="chip active" data-f="all">ทั้งหมด</div>
+    <div class="chip" data-f="event">นัดหมาย</div>
+    <div class="chip" data-f="task">งานที่ต้องทำ</div>
+    <div class="chip" data-f="note">บันทึก</div>
+    <div class="chip" data-f="pending">ค้างอยู่</div>
+  </div>
+</header>
+
+<div class="add-bar">
+  <button class="ev focus-ring" onclick="openModal('event')"><span class="ic">📅</span>เพิ่มนัดหมาย</button>
+  <button class="tk focus-ring" onclick="openModal('task')"><span class="ic">✅</span>เพิ่มงาน</button>
+  <button class="nt focus-ring" onclick="openModal('note')"><span class="ic">📝</span>เพิ่มบันทึก</button>
+</div>
+
+<main id="main">
+  <div class="loading"><div class="spin"></div>กำลังโหลด...</div>
+</main>
+
+<!-- Modal -->
+<div class="overlay" id="overlay">
+  <div class="sheet">
+    <div class="sheet-head">
+      <h2><span class="dot" id="modalDot"></span><span id="modalTitle">เพิ่มรายการ</span></h2>
+      <button class="x-close focus-ring" onclick="closeModal()">✕</button>
+    </div>
+
+    <input type="hidden" id="editId">
+    <input type="hidden" id="editType">
+
+    <label>หัวข้อ</label>
+    <input type="text" id="f_title" class="focus-ring" placeholder="เช่น ตรวจหน้างานฐานราก">
+
+    <div id="dateFields">
+      <div class="row2">
+        <div>
+          <label>วันที่</label>
+          <input type="date" id="f_date" class="focus-ring">
+        </div>
+        <div id="timeWrap">
+          <label>เวลาเริ่ม</label>
+          <input type="time" id="f_time" class="focus-ring">
+        </div>
+      </div>
+      <div class="row2" id="endTimeWrap">
+        <div>
+          <label>เวลาสิ้นสุด</label>
+          <input type="time" id="f_endtime" class="focus-ring">
+        </div>
+        <div>
+          <label>สถานที่</label>
+          <input type="text" id="f_location" class="focus-ring" placeholder="หน้างาน / ออฟฟิศ">
+        </div>
+      </div>
+    </div>
+
+    <label>โครงการ</label>
+    <select id="f_project" class="focus-ring">
+      <option value="">— ไม่ระบุโครงการ —</option>
+      <option value="7140 GPN เทพารักษ์ 112">7140 GPN เทพารักษ์ 112</option>
+      <option value="1178 คณาสิริ เอแบค บางนา">1178 คณาสิริ เอแบค บางนา</option>
+      <option value="1291 สิริเพลส พัฒนาการ">1291 สิริเพลส พัฒนาการ</option>
+      <option value="1305 สารานรมย์ รามคำแหง">1305 สารานรมย์ รามคำแหง</option>
+      <option value="DOH-163 M7 Section 3">DOH-163 M7 Section 3</option>
+    </select>
+
+    <label id="detailLabel">รายละเอียด</label>
+    <textarea id="f_detail" class="focus-ring" placeholder="รายละเอียดเพิ่มเติม..."></textarea>
+
+    <div id="doneToggleWrap" style="display:none; margin-top:14px;">
+      <label style="display:flex; align-items:center; gap:8px; cursor:pointer; margin:0;">
+        <input type="checkbox" id="f_done" style="width:18px; height:18px; margin:0;">
+        <span style="font-size:13.5px; color:var(--ink); font-weight:500;">ทำเสร็จแล้ว</span>
+      </label>
+    </div>
+
+    <button class="save-btn" id="saveBtn" onclick="saveItem()">บันทึก</button>
+    <button class="del-btn" id="delBtn" style="display:none;" onclick="deleteItem()">ลบรายการนี้</button>
+  </div>
+</div>
+
+<script>
+/* ============== CONFIG ============== */
+const GOOGLE_CLIENT_ID = "782871740460-452t7k8o1hrbgp1blhbc05n035dkokss.apps.googleusercontent.com";
+const SCOPES = "https://www.googleapis.com/auth/calendar.events";
+const CALENDAR_ID = "primary"; // เปลี่ยนเป็น Taskworld calendar id ได้ถ้าต้องการสร้างลงปฏิทินนั้นแทน
+const TASK_TAG = "[TASK]";
+const NOTES_KEY = "thc_etn_notes_v1";
+
+let tokenClient;
+let accessToken = null;
+let allItems = []; // unified {id, type, title, date, time, endtime, location, project, detail, done, raw}
+let currentFilter = "all";
+
+/* ============== GOOGLE AUTH ============== */
+window.onload = () => {
+  loadNotesOnly(); // แสดง note ได้ทันทีแม้ยังไม่ login
+  renderTimeline();
+
+  tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: GOOGLE_CLIENT_ID,
+    scope: SCOPES,
+    callback: (resp) => {
+      if (resp.error) { console.error(resp); return; }
+      accessToken = resp.access_token;
+      document.getElementById('authBtn').textContent = "เชื่อมต่อแล้ว ✓";
+      document.getElementById('authBtn').classList.add('connected');
+      fetchCalendarItems();
+    }
+  });
+};
+
+document.getElementById('authBtn').addEventListener('click', () => {
+  tokenClient.requestAccessToken();
+});
+
+/* ============== FETCH FROM CALENDAR ============== */
+async function fetchCalendarItems(){
+  if(!accessToken) return;
+  document.getElementById('main').innerHTML = '<div class="loading"><div class="spin"></div>กำลังโหลดข้อมูลจาก Calendar...</div>';
+
+  const timeMin = new Date(); timeMin.setMonth(timeMin.getMonth() - 1);
+  const timeMax = new Date(); timeMax.setMonth(timeMax.getMonth() + 3);
+
+  try{
+    const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(CALENDAR_ID)}/events?timeMin=${timeMin.toISOString()}&timeMax=${timeMax.toISOString()}&singleEvents=true&orderBy=startTime&maxResults=250`;
+    const res = await fetch(url, { headers: { Authorization: `Bearer ${accessToken}` }});
+    if(!res.ok){
+      if(res.status === 401){ accessToken = null; document.getElementById('authBtn').textContent="เชื่อม Calendar"; document.getElementById('authBtn').classList.remove('connected'); }
+      throw new Error('Calendar fetch failed: ' + res.status);
+    }
+    const data = await res.json();
+    const calItems = (data.items || []).map(ev => parseCalendarEvent(ev)).filter(Boolean);
+
+    const notes = loadNotes();
+    allItems = [...calItems, ...notes];
+    renderTimeline();
+  }catch(err){
+    console.error(err);
+    document.getElementById('main').innerHTML = `<div class="empty"><div class="ic">⚠️</div><p>โหลดข้อมูลจาก Calendar ไม่สำเร็จ<br>ลองกดเชื่อม Calendar อีกครั้ง</p></div>`;
+  }
+}
+
+function parseCalendarEvent(ev){
+  if(!ev.start) return null;
+  const isAllDay = !!ev.start.date;
+  const isTask = (ev.summary || "").startsWith(TASK_TAG);
+  const startStr = ev.start.dateTime || ev.start.date;
+  const dateObj = new Date(startStr);
+  const dateKey = isAllDay ? ev.start.date : dateObj.toISOString().slice(0,10);
+
+  const desc = ev.description || "";
+  const projMatch = desc.match(/\[PROJECT\]\s*(.+?)(\n|$)/);
+  const project = projMatch ? projMatch[1].trim() : "";
+  const detail = desc.replace(/\[PROJECT\].*(\n|$)/, "").replace(/\[DONE\]\s*(true|false)\s*\n?/,"").trim();
+  const doneMatch = desc.match(/\[DONE\]\s*(true|false)/);
+  const done = doneMatch ? doneMatch[1] === "true" : false;
+
+  return {
+    id: ev.id,
+    type: isTask ? "task" : "event",
+    title: isTask ? ev.summary.replace(TASK_TAG, "").trim() : ev.summary || "(ไม่มีหัวข้อ)",
+    date: dateKey,
+    time: isAllDay ? null : dateObj.toTimeString().slice(0,5),
+    endtime: (!isAllDay && ev.end && ev.end.dateTime) ? new Date(ev.end.dateTime).toTimeString().slice(0,5) : null,
+    location: ev.location || "",
+    project,
+    detail,
+    done,
+    raw: ev
+  };
+}
+
+/* ============== NOTES (localStorage) ============== */
+function loadNotes(){
+  try{
+    const raw = localStorage.getItem(NOTES_KEY);
+    return raw ? JSON.parse(raw) : [];
+  }catch(e){ return []; }
+}
+function saveNotes(notes){
+  localStorage.setItem(NOTES_KEY, JSON.stringify(notes));
+}
+function loadNotesOnly(){
+  allItems = loadNotes();
+}
+
+/* ============== RENDER ============== */
+document.getElementById('filterRow').addEventListener('click', (e)=>{
+  const chip = e.target.closest('.chip');
+  if(!chip) return;
+  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+  chip.classList.add('active');
+  currentFilter = chip.dataset.f;
+  renderTimeline();
+});
+
+function renderTimeline(){
+  const main = document.getElementById('main');
+  let items = [...allItems];
+
+  if(currentFilter === 'event') items = items.filter(i=>i.type==='event');
+  else if(currentFilter === 'task') items = items.filter(i=>i.type==='task');
+  else if(currentFilter === 'note') items = items.filter(i=>i.type==='note');
+  else if(currentFilter === 'pending') items = items.filter(i=>i.type==='task' && !i.done);
+
+  if(items.length === 0){
+    main.innerHTML = `<div class="empty"><div class="ic">🗂️</div><p>ยังไม่มีรายการในหมวดนี้<br>กดปุ่มด้านบนเพื่อเพิ่มนัดหมาย งาน หรือบันทึก</p></div>`;
+    return;
+  }
+
+  items.sort((a,b)=>{
+    if(a.date !== b.date) return a.date < b.date ? -1 : 1;
+    const ta = a.time || "00:00", tb = b.time || "00:00";
+    return ta < tb ? -1 : (ta > tb ? 1 : 0);
+  });
+
+  const groups = {};
+  items.forEach(it=>{
+    (groups[it.date] = groups[it.date] || []).push(it);
+  });
+
+  const todayKey = new Date().toISOString().slice(0,10);
+  let html = "";
+  Object.keys(groups).forEach(dateKey=>{
+    const isToday = dateKey === todayKey;
+    html += `<div class="day-group">
+      <div class="day-dot ${isToday?'today':''}"></div>
+      <div class="day-label">
+        <span class="d">${formatThaiDate(dateKey)}</span>
+        <span class="rel">${relativeLabel(dateKey, todayKey)}</span>
+      </div>`;
+    groups[dateKey].forEach(it=>{
+      html += renderItemCard(it);
+    });
+    html += `</div>`;
+  });
+  main.innerHTML = html;
+}
+
+function renderItemCard(it){
+  const typeLabel = it.type === 'event' ? 'นัดหมาย' : (it.type === 'task' ? 'งาน' : 'บันทึก');
+  const doneCls = (it.type==='task' && it.done) ? 'done' : '';
+  let timeHtml = '';
+  if(it.type === 'event' && it.time){
+    timeHtml = `<span class="item-time">${it.time}${it.endtime ? '–'+it.endtime : ''}</span>`;
+  } else if(it.type === 'task'){
+    timeHtml = `<span class="item-time">กำหนดส่ง</span>`;
+  }
+
+  let leading = '';
+  if(it.type === 'task'){
+    leading = `<div class="check ${doneCls}" onclick="event.stopPropagation(); toggleTaskDone('${it.id}')">${it.done ? '✓' : ''}</div>`;
+  }
+
+  const metaTags = [];
+  if(it.project) metaTags.push(`<span class="tag">${escapeHtml(it.project)}</span>`);
+  if(it.location) metaTags.push(`<span class="tag">📍 ${escapeHtml(it.location)}</span>`);
+
+  return `<div class="item ${it.type} ${doneCls}" onclick="openEdit('${it.type}','${it.id}')">
+    ${leading}
+    <div class="bar"></div>
+    <div class="body">
+      <div class="toprow">
+        <span class="badge ${it.type} ${doneCls}">${typeLabel}</span>
+        ${timeHtml}
+      </div>
+      <div class="item-title ${(it.type==='task' && it.done) ? 'strike' : ''}">${escapeHtml(it.title)}</div>
+      ${metaTags.length ? `<div class="item-meta">${metaTags.join('')}</div>` : ''}
+    </div>
+  </div>`;
+}
+
+function escapeHtml(s){
+  const d = document.createElement('div'); d.textContent = s||""; return d.innerHTML;
+}
+function formatThaiDate(dateKey){
+  const days = ['อา.','จ.','อ.','พ.','พฤ.','ศ.','ส.'];
+  const months = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  const d = new Date(dateKey + 'T00:00:00');
+  return `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()+543}`;
+}
+function relativeLabel(dateKey, todayKey){
+  const d1 = new Date(dateKey), d0 = new Date(todayKey);
+  const diff = Math.round((d1 - d0) / 86400000);
+  if(diff === 0) return 'วันนี้';
+  if(diff === 1) return 'พรุ่งนี้';
+  if(diff === -1) return 'เมื่อวาน';
+  if(diff > 1) return `อีก ${diff} วัน`;
+  return `${Math.abs(diff)} วันที่แล้ว`;
+}
+
+/* ============== TOGGLE TASK DONE ============== */
+async function toggleTaskDone(id){
+  const it = allItems.find(i=>i.id===id && i.type==='task');
+  if(!it) return;
+  it.done = !it.done;
+  renderTimeline();
+  if(accessToken){
+    await pushTaskDoneState(it);
+  }
+}
+async function pushTaskDoneState(it){
+  const desc = buildDescription(it.project, it.detail, it.done);
+  try{
+    await fetch(`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(CALENDAR_ID)}/events/${it.id}`, {
+      method:'PATCH',
+      headers:{ Authorization:`Bearer ${accessToken}`, 'Content-Type':'application/json' },
+      body: JSON.stringify({ description: desc })
+    });
+  }catch(e){ console.error(e); }
+}
+
+/* ============== MODAL ============== */
+function openModal(type){
+  document.getElementById('editId').value = "";
+  document.getElementById('editType').value = type;
+  document.getElementById('f_title').value = "";
+  document.getElementById('f_date').value = new Date().toISOString().slice(0,10);
+  document.getElementById('f_time').value = "";
+  document.getElementById('f_endtime').value = "";
+  document.getElementById('f_location').value = "";
+  document.getElementById('f_project').value = "";
+  document.getElementById('f_detail').value = "";
+  document.getElementById('f_done').checked = false;
+  document.getElementById('delBtn').style.display = "none";
+
+  setupModalForType(type);
+  document.getElementById('overlay').classList.add('show');
+}
+
+function openEdit(type, id){
+  const it = allItems.find(i=>i.id===id && i.type===type);
+  if(!it) return;
+  document.getElementById('editId').value = it.id;
+  document.getElementById('editType').value = type;
+  document.getElementById('f_title').value = it.title;
+  document.getElementById('f_date').value = it.date;
+  document.getElementById('f_time').value = it.time || "";
+  document.getElementById('f_endtime').value = it.endtime || "";
+  document.getElementById('f_location').value = it.location || "";
+  document.getElementById('f_project').value = it.project || "";
+  document.getElementById('f_detail').value = it.detail || "";
+  document.getElementById('f_done').checked = !!it.done;
+  document.getElementById('delBtn').style.display = "block";
+
+  setupModalForType(type);
+  document.getElementById('overlay').classList.add('show');
+}
+
+function setupModalForType(type){
+  const titleMap = { event:'นัดหมาย', task:'งานที่ต้องทำ', note:'บันทึก' };
+  document.getElementById('modalTitle').textContent = (document.getElementById('editId').value ? 'แก้ไข: ' : 'เพิ่ม: ') + titleMap[type];
+  document.getElementById('modalDot').className = 'dot ' + type;
+
+  const saveBtn = document.getElementById('saveBtn');
+  saveBtn.className = 'save-btn ' + type;
+
+  document.getElementById('timeWrap').style.display = type === 'event' ? 'block' : 'none';
+  document.getElementById('endTimeWrap').style.display = type === 'event' ? 'grid' : 'none';
+  document.getElementById('doneToggleWrap').style.display = type === 'task' ? 'block' : 'none';
+  document.getElementById('detailLabel').textContent = type === 'note' ? 'เนื้อหาบันทึก' : 'รายละเอียด';
+
+  if(!accessToken && type !== 'note'){
+    saveBtn.textContent = 'เชื่อม Calendar ก่อนบันทึก';
+  } else {
+    saveBtn.textContent = 'บันทึก';
+  }
+}
+
+function closeModal(){
+  document.getElementById('overlay').classList.remove('show');
+}
+document.getElementById('overlay').addEventListener('click', (e)=>{
+  if(e.target.id === 'overlay') closeModal();
+});
+
+/* ============== SAVE / DELETE ============== */
+function buildDescription(project, detail, done){
+  let lines = [];
+  if(project) lines.push(`[PROJECT] ${project}`);
+  if(done !== undefined) lines.push(`[DONE] ${done}`);
+  if(detail) lines.push(detail);
+  return lines.join('\n');
+}
+
+async function saveItem(){
+  const type = document.getElementById('editType').value;
+  const id = document.getElementById('editId').value;
+  const title = document.getElementById('f_title').value.trim();
+  const date = document.getElementById('f_date').value;
+  const time = document.getElementById('f_time').value;
+  const endtime = document.getElementById('f_endtime').value;
+  const location = document.getElementById('f_location').value.trim();
+  const project = document.getElementById('f_project').value;
+  const detail = document.getElementById('f_detail').value.trim();
+  const done = document.getElementById('f_done').checked;
+
+  if(!title){ alert('กรุณากรอกหัวข้อ'); return; }
+  if(!date){ alert('กรุณาเลือกวันที่'); return; }
+
+  if(type === 'note'){
+    saveNoteItem(id, title, date, project, detail);
+    closeModal();
+    renderTimeline();
+    return;
+  }
+
+  if(!accessToken){
+    alert('กรุณากดปุ่ม "เชื่อม Calendar" ที่ด้านบนก่อนบันทึก');
+    return;
+  }
+
+  const saveBtn = document.getElementById('saveBtn');
+  saveBtn.textContent = 'กำลังบันทึก...';
+
+  try{
+    let body;
+    if(type === 'event'){
+      if(!time){ alert('กรุณาระบุเวลาเริ่ม'); saveBtn.textContent='บันทึก'; return; }
+      const startDT = `${date}T${time}:00`;
+      const endDT = endtime ? `${date}T${endtime}:00` : `${date}T${addHour(time)}:00`;
+      body = {
+        summary: title,
+        location: location || undefined,
+        description: buildDescription(project, detail),
+        start: { dateTime: startDT, timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone },
+        end: { dateTime: endDT, timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone }
+      };
+    } else { // task -> all-day event
+      body = {
+        summary: `${TASK_TAG} ${title}`,
+        description: buildDescription(project, detail, done),
+        start: { date: date },
+        end: { date: date }
+      };
+    }
+
+    let res;
+    if(id){
+      res = await fetch(`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(CALENDAR_ID)}/events/${id}`, {
+        method:'PATCH',
+        headers:{ Authorization:`Bearer ${accessToken}`, 'Content-Type':'application/json' },
+        body: JSON.stringify(body)
+      });
+    } else {
+      res = await fetch(`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(CALENDAR_ID)}/events`, {
+        method:'POST',
+        headers:{ Authorization:`Bearer ${accessToken}`, 'Content-Type':'application/json' },
+        body: JSON.stringify(body)
+      });
+    }
+    if(!res.ok) throw new Error('Save failed: ' + res.status);
+
+    closeModal();
+    await fetchCalendarItems();
+  }catch(err){
+    console.error(err);
+    alert('บันทึกไม่สำเร็จ กรุณาลองใหม่');
+    saveBtn.textContent = 'บันทึก';
+  }
+}
+
+function addHour(timeStr){
+  const [h,m] = timeStr.split(':').map(Number);
+  const nh = (h+1) % 24;
+  return String(nh).padStart(2,'0') + ':' + String(m).padStart(2,'0');
+}
+
+function saveNoteItem(id, title, date, project, detail){
+  let notes = loadNotes();
+  if(id){
+    const idx = notes.findIndex(n=>n.id===id);
+    if(idx>-1) notes[idx] = { ...notes[idx], title, date, project, detail };
+  } else {
+    notes.push({
+      id: 'note_' + Date.now(),
+      type: 'note',
+      title, date, project, detail,
+      time: null, endtime: null, location: ""
+    });
+  }
+  saveNotes(notes);
+  allItems = allItems.filter(i=>i.type!=='note').concat(notes);
+}
+
+async function deleteItem(){
+  const type = document.getElementById('editType').value;
+  const id = document.getElementById('editId').value;
+  if(!id) return;
+  if(!confirm('ยืนยันการลบรายการนี้?')) return;
+
+  if(type === 'note'){
+    let notes = loadNotes().filter(n=>n.id!==id);
+    saveNotes(notes);
+    allItems = allItems.filter(i=>i.type!=='note').concat(notes);
+    closeModal();
+    renderTimeline();
+    return;
+  }
+
+  if(!accessToken){ alert('กรุณาเชื่อม Calendar ก่อน'); return; }
+  try{
+    await fetch(`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(CALENDAR_ID)}/events/${id}`, {
+      method:'DELETE',
+      headers:{ Authorization:`Bearer ${accessToken}` }
+    });
+    closeModal();
+    await fetchCalendarItems();
+  }catch(err){
+    console.error(err);
+    alert('ลบไม่สำเร็จ');
+  }
+}
+</script>
+</body>
+</html>
